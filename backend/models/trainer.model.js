@@ -60,9 +60,9 @@ trainerSchema.methods = {
     return await bcrypt.compare(plainPassword, this.password);
   },
 
-  generateAccessToken: async function(){
+  generateAccessToken: function(){
 
-    return await jwt.sign({
+    return jwt.sign({
       _id : this._id,
       email: this.email,
       username: this.username,
@@ -74,8 +74,8 @@ trainerSchema.methods = {
   )
   },
   
-  generateRefreshToken: async function(){
-    return await jwt.sign({
+  generateRefreshToken:  function(){
+    return  jwt.sign({
       _id: this._id,
     },
     process.env.REFRESH_TOKEN_SECRET,

@@ -80,7 +80,8 @@ const registerTrainer = asyncHandler(async (req, res, next) => {
 
   const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id)
 
-  const loggedInUser = await User.findById(user._id).select("-refreshToken")
+  // const loggedInUser = await User.findById(user._id).select("-refreshToken")
+  user.password=undefined
 
   const options = {
       httpOnly: true,
@@ -94,7 +95,7 @@ const registerTrainer = asyncHandler(async (req, res, next) => {
     .json({
       success : true,
       message : "Trainer register successfuly",
-      loggedInUser,accessToken,refreshToken
+      user,accessToken,refreshToken
     })
 });
 
@@ -124,7 +125,8 @@ const loginTrainer = asyncHandler(async (req, res, next) => {
 
   const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user.id)
 
-  const loggedInUser = await User.findById(user.id).select("-refreshToken")
+  // const loggedInUser = await User.findById(user.id).select("-refreshToken")
+  user.password=undefined;
 
   const options = {
       httpOnly: true,
@@ -138,7 +140,7 @@ const loginTrainer = asyncHandler(async (req, res, next) => {
     .json({
       success : true,
       message : "Trainer loggedIn successfuly",
-      loggedInUser,accessToken,refreshToken
+      user,accessToken,refreshToken
     })
 });
 

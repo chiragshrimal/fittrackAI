@@ -3,6 +3,7 @@ import AppError from '../utils/appError.js';
 import User from '../models/trainee.model.js';
 import bcrypt from "bcryptjs";
 import {ApiResponse} from '../utils/ApiResponse.js';
+import {ApiError} from '../utils/ApiError.js';
 
 const cookieOptions = {
   secure: process.env.NODE_ENV === 'production' ? true : false,
@@ -15,8 +16,10 @@ const cookieOptions = {
 const generateAccessAndRefereshTokens = async(userId) =>{
   try {
       const user = await User.findById(userId)
-      const accessToken = user.generateAccessToken()
-      const refreshToken = user.generateRefreshToken()
+      const accessToken = await user.generateAccessToken()
+      const refreshToken = await user.generateRefreshToken()
+      // console.log(refreshToken);
+      // console.log(accessToken);
 
       user.refreshToken = refreshToken
       await user.save({ validateBeforeSave: false })
@@ -43,7 +46,8 @@ const registerTrainee = asyncHandler(async (req, res, next) => {
     return next(new AppError('All fields are required', 400));
   }
 
-  const userNameExists = await User.findOne({ username});
+  try {
+    const userNameExists = await User.findOne({ username});
 
   if(userNameExists){
     return next(new AppError("Username already exists",410));
@@ -80,7 +84,11 @@ const registerTrainee = asyncHandler(async (req, res, next) => {
 
   const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id)
 
-  const loggedInUser = await User.findById(user._id).select("-refreshToken")
+  // console.log(accessToken);
+  // console.log(refreshToken);
+
+  // const loggedIn = await User.findById(user._id).select("-refreshToken")
+  user.password=undefined;
 
   const options = {
       httpOnly: true,
@@ -94,8 +102,12 @@ const registerTrainee = asyncHandler(async (req, res, next) => {
     .json({
       success : true,
       message : "Trainee register successfuly",
-      loggedInUser,accessToken,refreshToken
+      user,accessToken,refreshToken
     })
+  } catch (error) {
+    return next(new AppError(error.message ,500));
+  }
+
 });
 
 /**
@@ -112,7 +124,8 @@ const loginTrainee = asyncHandler(async (req, res, next) => {
     return next(new AppError('Email and Password are required', 400));
   }
 
-  // Finding the user with the sent email
+  try {
+    // Finding the user with the sent email
   const user = await User.findOne({email}).select("+password");
 
   // If no user or sent password do not match then send generic response
@@ -124,7 +137,8 @@ const loginTrainee = asyncHandler(async (req, res, next) => {
 
   const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user.id)
 
-  const loggedInUser = await User.findById(user.id).select("-refreshToken")
+  // const  = await User.findById(user.id).select("-refreshToken")
+  user.password=undefined;
 
   const options = {
       httpOnly: true,
@@ -138,8 +152,11 @@ const loginTrainee = asyncHandler(async (req, res, next) => {
     .json({
       success : true,
       message : "Trainee loggedIn successfuly",
-      loggedInUser,accessToken,refreshToken
+      user,accessToken,refreshToken
     })
+  } catch (error) {
+    return next(new AppError(error.message , 500));
+  }
 });
 
 // refresh token se Access token ko renew krate hai 
@@ -198,7 +215,9 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
  * @ACCESS Public
  */
 const logoutTrainee = asyncHandler(async(req, res) => {
-  await User.findByIdAndUpdate(
+
+  try {
+    await User.findByIdAndUpdate(
       req.user._id,
       {
           $unset: {
@@ -223,8 +242,12 @@ const logoutTrainee = asyncHandler(async(req, res) => {
     success: true,
     message : "Trainee logout successfully"
   })
-})
 
+  } catch (error) {
+    
+    next(new AppError(error.message , 500));
+  }
+});
 
 /**
  * @LOGGED_IN_USER_DETAILS
@@ -233,7 +256,9 @@ const logoutTrainee = asyncHandler(async(req, res) => {
  */
 const getLoggedInTraineeDetails = asyncHandler(async (req, res, _next) => {
   // Finding the user using the id from modified req object
-  const user = await User.findById(req.user.id).select("-password -refreshToken");
+
+  try {
+    const user = await User.findById(req.user.id).select("-password -refreshToken");
 
   return res
   .status(200)
@@ -241,6 +266,11 @@ const getLoggedInTraineeDetails = asyncHandler(async (req, res, _next) => {
     success: true,
     message : "Trainee details fetched successfully"
   })
+  } catch (error) {
+    
+    next(new AppError(error.message, 500));
+  }
+  
 });
 
 export {loginTrainee, 

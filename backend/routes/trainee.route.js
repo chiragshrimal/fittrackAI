@@ -6,7 +6,7 @@ import {
   refreshAccessToken, 
   getLoggedInTraineeDetails, 
 } from "../controllers/trainee.controller.js";
-import verifyJWT from "../middlewares/auth.middleware.js";
+import verifyJWT from "../middlewares/authTrainee.middleware.js";
 
 
 const router = Router()

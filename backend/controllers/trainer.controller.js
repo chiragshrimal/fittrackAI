@@ -43,7 +43,8 @@ const registerTrainer = asyncHandler(async (req, res, next) => {
     return next(new AppError('All fields are required', 400));
   }
 
-  const userNameExists = await User.findOne({ username});
+  try {
+    const userNameExists = await User.findOne({ username});
 
   if(userNameExists){
     return next(new AppError("Username already exists",410));
@@ -97,6 +98,11 @@ const registerTrainer = asyncHandler(async (req, res, next) => {
       message : "Trainer register successfuly",
       user,accessToken,refreshToken
     })
+  } catch (error) {
+
+    return next(new AppError(error.message,500));
+  }
+
 });
 
 /**
@@ -113,7 +119,8 @@ const loginTrainer = asyncHandler(async (req, res, next) => {
     return next(new AppError('Email and Password are required', 400));
   }
 
-  // Finding the user with the sent email
+  try {
+    // Finding the user with the sent email
   const user = await User.findOne({email}).select("+password");
 
   // If no user or sent password do not match then send generic response
@@ -142,6 +149,10 @@ const loginTrainer = asyncHandler(async (req, res, next) => {
       message : "Trainer loggedIn successfuly",
       user,accessToken,refreshToken
     })
+  } catch (error) {
+    return next(new AppError(error.message,500));
+  }
+  
 });
 
 // refresh token se Access token ko renew krate hai 
@@ -200,7 +211,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
  * @ACCESS Public
  */
 const logoutTrainer = asyncHandler(async(req, res) => {
-  await User.findByIdAndUpdate(
+  try {
+    await User.findByIdAndUpdate(
       req.user._id,
       {
           $unset: {
@@ -225,6 +237,10 @@ const logoutTrainer = asyncHandler(async(req, res) => {
     success: true,
     message : "Trainer logout successfully"
   })
+  } catch (error) {
+    return next(new AppError(e.message,500));
+  }
+ 
 })
 
 
@@ -235,7 +251,8 @@ const logoutTrainer = asyncHandler(async(req, res) => {
  */
 const getLoggedInTrainerDetails = asyncHandler(async (req, res, _next) => {
   // Finding the user using the id from modified req object
-  const user = await User.findById(req.user.id).select("-password -refreshToken");
+  try {
+    const user = await User.findById(req.user.id).select("-password -refreshToken");
 
   return res
   .status(200)
@@ -243,6 +260,10 @@ const getLoggedInTrainerDetails = asyncHandler(async (req, res, _next) => {
     success: true,
     message : "Trainer details fetched successfully"
   })
+  } catch (error) {
+    return next(new AppError(error.message,500));
+  }
+  
 });
 
 export {loginTrainer, 

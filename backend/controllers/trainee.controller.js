@@ -1,8 +1,6 @@
 import asyncHandler from '../middlewares/asyncHandler.middleware.js';
 import AppError from '../utils/appError.js';
 import User from '../models/trainee.model.js';
-import bcrypt from "bcryptjs";
-import {ApiResponse} from '../utils/ApiResponse.js';
 import {ApiError} from '../utils/ApiError.js';
 
 const cookieOptions = {
@@ -200,7 +198,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         success: true,
         message : "Access token refreshed",
         accessToken,refreshToken: newRefreshToken
-
       })
   } catch (error) {
       throw new ApiError(411, error?.message || "Invalid refresh token")
@@ -258,13 +255,14 @@ const getLoggedInTraineeDetails = asyncHandler(async (req, res, _next) => {
   // Finding the user using the id from modified req object
 
   try {
-    const user = await User.findById(req.user.id).select("-password -refreshToken");
+    const user = await User.findById(req.user.id).select("-refreshToken");
 
   return res
   .status(200)
   .json({
     success: true,
-    message : "Trainee details fetched successfully"
+    message : "Trainee details fetched successfully",
+    user
   })
   } catch (error) {
     
